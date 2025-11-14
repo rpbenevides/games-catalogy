@@ -1,0 +1,434 @@
+/* ================================
+   RESET E BASE
+   ================================ */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  color: #ffffff;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Tema Claro - Muito mais contraste */
+html.light body {
+  background-color: #f9f9f9 !important;
+  color: #1a1a1a !important;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+/* Header */
+header {
+  background-color: #09090b;
+  border-bottom: 1px solid #27272a;
+  transition: all 0.3s ease;
+}
+
+html.light header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e5e5 !important;
+  color: #1a1a1a;
+}
+
+/* ================================
+   COMPONENTES REUTILIZÁVEIS
+   ================================ */
+
+/* Cards */
+.card {
+  background-color: #0a0a0a;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: #3f3f46;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Tema Claro - Cards */
+html.light .card {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+}
+
+html.light .card:hover {
+  border-color: #d0d0d0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Labels */
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #d4d4d8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+html.light .label {
+  color: #525252 !important;
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  color: #fafafa;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+html.light .input {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+  color: #1a1a1a !important;
+}
+
+.input:hover {
+  border-color: #3f3f46;
+}
+
+html.light .input:hover {
+  border-color: #d0d0d0 !important;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #0f0f12;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+html.light .input:focus {
+  background-color: #fafafa !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.input::placeholder {
+  color: #71717a;
+}
+
+html.light .input::placeholder {
+  color: #a0a0a0 !important;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+html.light .btn:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #52525b;
+  color: white;
+}
+
+html.light .btn-secondary {
+  background-color: #e5e5e5;
+  color: #1a1a1a;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #71717a;
+}
+
+html.light .btn-secondary:hover:not(:disabled) {
+  background-color: #d0d0d0;
+}
+
+.btn-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.btn-icon {
+  padding: 0.75rem;
+  border-radius: 50%;
+  background-color: #27272a;
+  color: #fbbf24;
+}
+
+html.light .btn-icon {
+  background-color: #e5e5e5;
+  color: #d97706;
+}
+
+.btn-icon:hover {
+  background-color: #3f3f46;
+}
+
+html.light .btn-icon:hover {
+  background-color: #d0d0d0;
+}
+
+/* ================================
+   TABELA
+   ================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table tbody tr {
+  border-bottom: 1px solid #27272a;
+  transition: background-color 0.3s ease;
+}
+
+html.light table tbody tr {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+table tbody tr:hover {
+  background-color: #0f0f12;
+}
+
+html.light table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+table td {
+  padding: 1rem;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 700;
+  color: #d4d4d8;
+  user-select: none;
+  background-color: #0a0a0a;
+}
+
+html.light table th {
+  color: #525252;
+  background-color: #f5f5f5;
+}
+
+.hover-header:hover {
+  background-color: #18181b;
+  cursor: pointer;
+}
+
+html.light .hover-header:hover {
+  background-color: #eeeeee;
+}
+
+/* ================================
+   ANIMAÇÕES
+   ================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================================
+   MENSAGENS
+   ================================ */
+.message {
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.message.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-left-color: #10b981;
+  color: #86efac;
+}
+
+.message.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left-color: #ef4444;
+  color: #fca5a5;
+}
+
+.message.warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left-color: #f59e0b;
+  color: #fcd34d;
+}
+
+.message.info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left-color: #3b82f6;
+  color: #93c5fd;
+}
+
+/* ================================
+   SEARCH RESULTS
+   ================================ */
+.search-result-item {
+  padding: 0.75rem;
+  background-color: #0a0a0a;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #f1f5f9;
+}
+
+.search-result-item:hover {
+  background-color: #18181b;
+  border-color: #3f3f46;
+}
+
+html.light .search-result-item {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e5e5 !important;
+  color: #1a1a1a !important;
+}
+
+html.light .search-result-item:hover {
+  background-color: #f5f5f5 !important;
+  border-color: #d0d0d0 !important;
+}
+
+.search-result-subtitle {
+  color: #a1a1a6;
+}
+
+html.light .search-result-subtitle {
+  color: #757575 !important;
+}
+
+/* ================================
+   MODAL
+   ================================ */
+#confirmation-modal {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ================================
+   ACESSIBILIDADE
+   ================================ */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ================================
+   SCROLLBAR
+   ================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+@media (max-width: 768px) {
+  header {
+    padding: 1rem 1rem !important;
+  }
+
+  main {
+    padding: 1rem !important;
+  }
+
+  .btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .input {
+    font-size: 16px;
+  }
+}

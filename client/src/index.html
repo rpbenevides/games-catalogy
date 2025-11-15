@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Catálogo pessoal de jogos com integração IGDB"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Catálogo de Jogos</title>
+    <script src="/app.js" defer></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/theme-init.js"></script>
+  </head>
+  <body class="bg-black text-white min-h-screen flex flex-col">
+    <!-- HEADER -->
+    <header
+      class="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-40 shadow-2xl"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center"
+      >
+        <div class="flex items-center gap-4">
+          <span class="text-4xl">🎮</span>
+          <h1 class="text-3xl font-bold">Catálogo de Jogos</h1>
+        </div>
+        <nav class="flex items-center gap-4">
+          <button
+            id="export-button"
+            class="btn btn-success"
+            title="Exportar dados"
+          >
+            📊 Exportar
+          </button>
+          <button
+            id="theme-toggle"
+            class="btn btn-icon"
+            aria-label="Alternar tema"
+          >
+            🌙
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main
+      class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8"
+    >
+      <!-- SEARCH SECTION -->
+      <section class="space-y-6">
+        <div class="card">
+          <h2 class="text-xl font-bold mb-6 text-gray-100">Buscar e Filtrar</h2>
+
+          <div class="space-y-4">
+            <!-- Local Search -->
+            <div>
+              <label class="label">Filtrar Jogos</label>
+              <input
+                id="local-search"
+                type="text"
+                placeholder="Digite para filtrar..."
+                class="input w-full"
+              />
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="label">Status</label>
+                <select id="filter-status" class="input w-full">
+                  <option value="">Todos os status</option>
+                  <option>Não iniciado</option>
+                  <option>Jogando</option>
+                  <option>Pausado</option>
+                  <option>Concluído</option>
+                  <option>Dropado</option>
+                </select>
+              </div>
+              <div>
+                <label class="label">Plataforma</label>
+                <select id="filter-platform" class="input w-full">
+                  <option value="">Todas as plataformas</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- IGDB Search -->
+            <div>
+              <label class="label">Buscar na IGDB</label>
+              <div class="flex gap-3">
+                <input
+                  id="search-input"
+                  type="text"
+                  placeholder="Nome do jogo..."
+                  class="input flex-grow"
+                />
+                <button
+                  id="search-button"
+                  class="btn btn-primary whitespace-nowrap"
+                >
+                  🔍 Buscar
+                </button>
+              </div>
+              <div
+                id="search-status"
+                class="text-sm text-gray-400 mt-2 hidden"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="search-results" class="space-y-2"></div>
+      </section>
+
+      <!-- FORM SECTION -->
+      <section id="game-form" class="card hidden">
+        <h3 class="text-xl font-bold mb-6 text-gray-100" id="form-title">
+          Adicionar Jogo
+        </h3>
+        <form id="game-form-element" class="space-y-4">
+          <input type="hidden" id="form-id" name="id" />
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="label">Plataforma</label>
+              <select
+                id="form-plataforma"
+                name="plataforma"
+                class="input w-full"
+                required
+              >
+                <option value="">Carregando...</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Nome do Jogo</label>
+              <input
+                type="text"
+                id="form-nome"
+                name="nome"
+                placeholder="Nome do jogo"
+                class="input w-full"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="label">Lançamento</label>
+              <input
+                type="date"
+                id="form-data"
+                name="dataLancamento"
+                class="input w-full"
+              />
+            </div>
+            <div>
+              <label class="label">Gênero</label>
+              <input
+                type="text"
+                id="form-genero"
+                name="genero"
+                placeholder="Ex: RPG, FPS"
+                class="input w-full"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="label">Status</label>
+              <select
+                id="form-status"
+                name="status"
+                class="input w-full"
+                required
+              >
+                <option>Não iniciado</option>
+                <option>Jogando</option>
+                <option>Pausado</option>
+                <option>Concluído</option>
+                <option>Dropado</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Tempo de Jogo</label>
+              <input
+                type="text"
+                id="form-tempo"
+                name="tempo"
+                placeholder="Ex: 10h, 90m"
+                class="input w-full"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="label">Início</label>
+              <input
+                type="date"
+                id="form-inicio"
+                name="inicio"
+                class="input w-full"
+              />
+            </div>
+            <div>
+              <label class="label">Fim</label>
+              <input
+                type="date"
+                id="form-fim"
+                name="fim"
+                class="input w-full"
+              />
+            </div>
+            <div>
+              <label class="label">Nota (0-10)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                id="form-nota"
+                name="nota"
+                placeholder="8.5"
+                class="input w-full"
+              />
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-4 border-t border-zinc-800">
+            <button type="submit" class="btn btn-primary">✅ Salvar</button>
+            <button type="button" id="cancel-form" class="btn btn-secondary">
+              ❌ Cancelar
+            </button>
+            <button
+              type="button"
+              id="delete-game"
+              class="btn btn-danger ml-auto hidden"
+            >
+              🗑️ Excluir
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- GAMES TABLE -->
+      <section class="space-y-4">
+        <h2 class="text-2xl font-bold">Meus Jogos</h2>
+
+        <div class="card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-zinc-900 border-b border-zinc-800">
+                <tr>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header"
+                    data-sort="plataforma"
+                  >
+                    Console
+                  </th>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header"
+                    data-sort="nome"
+                  >
+                    Nome
+                  </th>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header hidden md:table-cell"
+                    data-sort="dataLancamento"
+                  >
+                    Lançamento
+                  </th>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header hidden lg:table-cell"
+                    data-sort="genero"
+                  >
+                    Gênero
+                  </th>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header"
+                    data-sort="status"
+                  >
+                    Status
+                  </th>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header hidden sm:table-cell"
+                    data-sort="tempo"
+                  >
+                    Tempo
+                  </th>
+                  <th
+                    class="px-4 py-4 text-left font-semibold text-gray-300 cursor-pointer hover-header hidden md:table-cell"
+                    data-sort="nota"
+                  >
+                    Nota
+                  </th>
+                  <th class="px-4 py-4 text-center font-semibold text-gray-300">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="games-table-body"
+                class="divide-y divide-zinc-800"
+              ></tbody>
+            </table>
+          </div>
+
+          <div id="skeleton-loader" class="hidden p-4 space-y-3">
+            <div class="h-12 bg-zinc-800 rounded animate-pulse"></div>
+            <div class="h-12 bg-zinc-800 rounded animate-pulse"></div>
+            <div class="h-12 bg-zinc-800 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="flex justify-between items-center gap-4">
+          <button id="prev-page" class="btn btn-secondary">← Anterior</button>
+          <span id="page-info" class="text-sm text-gray-400"></span>
+          <button id="next-page" class="btn btn-secondary">Próxima →</button>
+        </nav>
+      </section>
+    </main>
+
+    <!-- MODAL -->
+    <div
+      id="confirmation-modal"
+      class="fixed inset-0 bg-black/80 flex items-center justify-center hidden z-50 backdrop-blur-sm"
+    >
+      <div
+        class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg max-w-md w-full mx-4"
+      >
+        <h3 class="text-lg font-bold mb-4">Confirmar ação</h3>
+        <p id="modal-message" class="mb-6 text-gray-400">Tem certeza?</p>
+        <div class="flex justify-end gap-3">
+          <button id="modal-cancel" class="btn btn-secondary">Cancelar</button>
+          <button id="modal-confirm" class="btn btn-danger">Confirmar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div
+      id="message-container"
+      class="fixed bottom-4 right-4 space-y-3 z-50"
+    ></div>
+
+    <!-- LOADER -->
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center hidden z-50 backdrop-blur-sm"
+    >
+      <div
+        class="flex items-center gap-3 bg-zinc-900 border border-zinc-800 px-6 py-4 rounded-lg"
+      >
+        <div
+          class="animate-spin w-5 h-5 border-2 border-blue-500 border-b-transparent rounded-full"
+        ></div>
+        <span>Carregando...</span>
+      </div>
+    </div>
+
+    <script src="/sw-register.js"></script>
+  </body>
+</html>

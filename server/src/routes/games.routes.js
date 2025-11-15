@@ -2,13 +2,6 @@ const express = require('express')
 const rateLimit = require('express-rate-limit')
 const { validateGame } = require('../middleware/validation')
 const { checkAuth, logger } = require('../middleware/auth')
-const {
-  getAllGames,
-  addGame,
-  updateGame,
-  deleteGame,
-  exportGamesAsCSV
-} = require('../services/sheetsService')
 const constants = require('../config/constants')
 
 const router = express.Router()
@@ -21,27 +14,42 @@ const apiLimiter = rateLimit({
   legacyHeaders: false
 })
 
-// GET /api/games - Listar todos os jogos
+/**
+ * GET /games
+ * Listar todos os jogos
+ */
 router.get('/', apiLimiter, checkAuth, async (req, res, next) => {
   try {
-    const games = await getAllGames()
+    const games = await req.sheetsService.getAll()
     res.json(games)
   } catch (error) {
     next(error)
   }
 })
 
-// POST /api/games - Adicionar novo jogo
-router.post('/', apiLimiter, checkAuth, validateGame, async (req, res, next) => {
-  try {
-    await addGame(req.body)
-    res.status(201).json({ message: 'Jogo adicionado com sucesso' })
-  } catch (error) {
-    next(error)
+/**
+ * POST /games
+ * Adicionar novo jogo
+ */
+router.post(
+  '/',
+  apiLimiter,
+  checkAuth,
+  validateGame,
+  async (req, res, next) => {
+    try {
+      await req.sheetsService.add(req.body)
+      res.status(201).json({ message: 'Jogo adicionado com sucesso' })
+    } catch (error) {
+      next(error)
+    }
   }
-})
+)
 
-// PUT /api/games/:id - Atualizar jogo
+/**
+ * PUT /games/:id
+ * Atualizar um jogo existente
+ */
 router.put(
   '/:id',
   apiLimiter,
@@ -54,7 +62,7 @@ router.put(
         return res.status(400).json({ message: 'ID de jogo inválido' })
       }
 
-      await updateGame(gameId, req.body)
+      await req.sheetsService.update(gameId, req.body)
       res.json({ message: 'Jogo atualizado com sucesso' })
     } catch (error) {
       next(error)
@@ -62,7 +70,10 @@ router.put(
   }
 )
 
-// DELETE /api/games/:id - Deletar jogo
+/**
+ * DELETE /games/:id
+ * Deletar um jogo
+ */
 router.delete('/:id', apiLimiter, checkAuth, async (req, res, next) => {
   try {
     const gameId = parseInt(req.params.id, 10)
@@ -70,17 +81,20 @@ router.delete('/:id', apiLimiter, checkAuth, async (req, res, next) => {
       return res.status(400).json({ message: 'ID de jogo inválido' })
     }
 
-    await deleteGame(gameId)
+    await req.sheetsService.delete(gameId)
     res.json({ message: 'Jogo deletado com sucesso' })
   } catch (error) {
     next(error)
   }
 })
 
-// GET /api/games/export - Exportar jogos como CSV
+/**
+ * GET /games/export
+ * Exportar jogos como CSV
+ */
 router.get('/export', apiLimiter, checkAuth, async (req, res, next) => {
   try {
-    const csv = await exportGamesAsCSV()
+    const csv = await req.sheetsService.exportAsCSV()
     const filename = `meus-jogos-${new Date().toISOString().split('T')[0]}.csv`
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')

@@ -121,7 +121,7 @@ app.use('/novo-recurso', novoRecursoRoutes)
 ```javascript
 const { logger } = require('../middleware/auth')
 
-const minhaFuncao = async (param) => {
+const minhaFuncao = async param => {
   try {
     logger.info('Fazendo algo', { param })
     // Lógica

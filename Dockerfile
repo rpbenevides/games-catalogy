@@ -7,8 +7,8 @@ COPY server/package*.json ./server/
 
 # Instalar dependências
 RUN npm ci --only=production && \
-    cd server && \
-    npm ci --only=production
+  cd server && \
+  npm ci --only=production
 
 # Copiar código
 COPY . .

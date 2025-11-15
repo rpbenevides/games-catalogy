@@ -3,18 +3,23 @@ const cors = require('cors')
 const helmet = require('helmet')
 const path = require('path')
 const { google } = require('googleapis')
+const rateLimit = require('express-rate-limit')
 
-const { validateEnvironment, getGoogleCredentials } = require('./config/environment')
+const {
+  validateEnvironment,
+  getGoogleCredentials
+} = require('./config/environment')
 const constants = require('./config/constants')
 const { logger, checkAuth } = require('./middleware/auth')
 const errorHandler = require('./middleware/errorHandler')
-const { initializeSheets } = require('./services/sheetsService')
-const { searchGames } = require('./services/igdbService')
 
+// Services
+const SheetsService = require('./services/sheetsService')
+const IGDBService = require('./services/igdbService')
+
+// Routes
 const gamesRoutes = require('./routes/games.routes')
 const healthRoutes = require('./routes/health.routes')
-
-const rateLimit = require('express-rate-limit')
 
 // Validar ambiente
 validateEnvironment()
@@ -35,11 +40,16 @@ const apiLimiter = rateLimit({
   legacyHeaders: false
 })
 
-// Inicializar Google Auth
+// Instâncias de serviços globais
+let sheetsService = null
+let igdbService = null
 let authReady = false
 let authError = null
 
-;(async () => {
+/**
+ * Inicializa os serviços
+ */
+const initializeServices = async () => {
   try {
     const credentials = getGoogleCredentials()
 
@@ -51,29 +61,43 @@ let authError = null
     // Testar a autenticação
     await auth.getClient()
 
-    // Inicializar Sheets
-    await initializeSheets(auth)
+    // Inicializar Sheets Service
+    sheetsService = new SheetsService()
+    await sheetsService.initialize(auth)
+
+    // Inicializar IGDB Service
+    igdbService = new IGDBService(
+      process.env.TWITCH_CLIENT_ID,
+      process.env.TWITCH_CLIENT_SECRET
+    )
 
     authReady = true
-    logger.info('Autenticação Google inicializada com sucesso')
+    logger.info('Serviços inicializados com sucesso')
 
     // Adicionar auth aos requisitos do app
     app.use((req, res, next) => {
       req.auth = { ready: true, error: null }
+      req.sheetsService = sheetsService
+      req.igdbService = igdbService
       next()
     })
   } catch (err) {
     authError = err
-    logger.error('Falha na autenticação Google', { error: err.message })
+    logger.error('Falha ao inicializar serviços', { error: err.message })
 
     app.use((req, res, next) => {
       req.auth = { ready: false, error: authError }
       next()
     })
   }
-})()
+}
 
-// Rota de busca IGDB
+// Inicializar serviços no startup
+initializeServices()
+
+/**
+ * Rota de busca IGDB
+ */
 app.get('/search', apiLimiter, async (req, res, next) => {
   try {
     const { name } = req.query
@@ -85,7 +109,7 @@ app.get('/search', apiLimiter, async (req, res, next) => {
       })
     }
 
-    const results = await searchGames(safe)
+    const results = await req.igdbService.searchGames(safe)
     res.json(results)
   } catch (error) {
     next(error)

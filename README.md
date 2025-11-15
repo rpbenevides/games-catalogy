@@ -42,12 +42,14 @@ Catálogo de jogos com integração IGDB e Google Sheets.
 ## Setup
 
 ### 1. Instalar dependências do servidor
+
 ```bash
 cd server
 npm install
 ```
 
 ### 2. Configurar variáveis de ambiente
+
 Criar arquivo `.env` na raiz do projeto:
 
 ```env
@@ -61,6 +63,7 @@ FRONTEND_ORIGIN=http://localhost:3000
 ```
 
 ### 3. Executar o servidor
+
 ```bash
 # Desenvolvimento
 npm run dev
@@ -72,6 +75,7 @@ npm start
 ## API Endpoints
 
 ### Jogos
+
 - `GET /games` - Listar todos os jogos
 - `POST /games` - Criar novo jogo
 - `PUT /games/:id` - Atualizar jogo
@@ -79,24 +83,29 @@ npm start
 - `GET /games/export` - Exportar como CSV
 
 ### Busca IGDB
+
 - `GET /search?name=query` - Buscar jogos na IGDB
 
 ### Health Check
+
 - `GET /health` - Status da aplicação
 
 ## Desenvolvimento
 
 ### Adicionar nova rota
+
 1. Criar arquivo em `server/src/routes/`
 2. Importar em `server/src/app.js`
 3. Adicionar middleware necessário
 
 ### Adicionar novo serviço
+
 1. Criar arquivo em `server/src/services/`
 2. Importar onde necessário
 3. Usar em rotas ou outros serviços
 
 ### Adicionar middleware
+
 1. Criar arquivo em `server/src/middleware/`
 2. Importar em `server/src/app.js`
 3. Aplicar com `app.use()`
@@ -104,12 +113,14 @@ npm start
 ## Deployment
 
 ### Docker
+
 ```bash
 docker build -t games-catalog .
 docker run -p 3000:3000 --env-file .env games-catalog
 ```
 
 ### Variáveis de Ambiente Necessárias
+
 - `SPREADSHEET_ID` - ID da planilha Google
 - `GOOGLE_CREDENTIALS_JSON` - JSON com credenciais Google
 - `TWITCH_CLIENT_ID` - Client ID da Twitch/IGDB

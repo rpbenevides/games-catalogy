@@ -61,9 +61,11 @@ const initializeServices = async () => {
     // Testar a autenticação
     await auth.getClient()
 
-    // Inicializar Sheets Service
-    sheetsService = new SheetsService()
-    await sheetsService.initialize(auth)
+    // Inicializar Sheets Service com auth e spreadsheetId
+    sheetsService = new SheetsService(
+      auth,
+      process.env.SPREADSHEET_ID || constants.SPREADSHEET_ID
+    )
 
     // Inicializar IGDB Service
     igdbService = new IGDBService(

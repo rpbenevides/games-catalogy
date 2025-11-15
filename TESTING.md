@@ -120,13 +120,16 @@ describe('IGDBService', () => {
 ```javascript
 // server/src/services/__tests__/sheetsService.test.js
 const SheetsService = require('../sheetsService')
+const { google } = require('googleapis')
+
+jest.mock('googleapis')
 
 describe('SheetsService', () => {
   let service
+  let mockAuth
   let mockSheetsClient
 
   beforeEach(() => {
-    service = new SheetsService()
     mockSheetsClient = {
       spreadsheets: {
         values: {
@@ -138,38 +141,58 @@ describe('SheetsService', () => {
         batchUpdate: jest.fn()
       }
     }
+
+    google.sheets = jest.fn().mockReturnValue(mockSheetsClient)
+    mockAuth = {}
   })
 
-  describe('initialize()', () => {
-    it('deve inicializar com sucesso', async () => {
-      const mockAuth = {}
-      const mockGoogleSheets = jest.fn().mockReturnValue(mockSheetsClient)
+  describe('constructor()', () => {
+    it('deve inicializar com auth e spreadsheetId', () => {
+      service = new SheetsService(mockAuth, 'test-sheet-id')
 
-      jest.doMock('googleapis', () => ({
-        google: { sheets: mockGoogleSheets }
-      }))
-
-      // Inicializar
-      expect(service.isInitialized()).toBe(false)
-
-      // Após initialize
-      // expect(service.isInitialized()).toBe(true)
+      expect(service.isInitialized()).toBe(true)
+      expect(service.spreadsheetId).toBe('test-sheet-id')
     })
 
-    it('deve lançar erro se falhar', async () => {
-      const mockAuth = {}
-      // Simular erro
+    it('deve usar ID padrão se não fornecido', () => {
+      service = new SheetsService(mockAuth)
+
+      expect(service.spreadsheetId).toBe(process.env.SPREADSHEET_ID || constants.SPREADSHEET_ID)
+    })
+
+    it('deve lançar erro se auth não fornecido', () => {
+      expect(() => new SheetsService(null)).toThrow()
+      expect(() => new SheetsService(undefined)).toThrow()
+    })
+  })
+
+  describe('isInitialized()', () => {
+    it('deve retornar true se construído com sucesso', () => {
+      service = new SheetsService(mockAuth)
+      expect(service.isInitialized()).toBe(true)
     })
   })
 
   describe('getAll()', () => {
-    it('deve retornar lista de jogos', async () => {
-      service.client = mockSheetsClient
+    beforeEach(() => {
+      service = new SheetsService(mockAuth, 'test-sheet-id')
+    })
 
+    it('deve retornar lista de jogos', async () => {
       mockSheetsClient.spreadsheets.values.get.mockResolvedValueOnce({
         data: {
           values: [
-            ['PC', 'Witcher 3', '2015-05-19', 'RPG', 'Concluído', '100h', '', '', '9']
+            [
+              'PC',
+              'Witcher 3',
+              '2015-05-19',
+              'RPG',
+              'Concluído',
+              '100h',
+              '',
+              '',
+              '9'
+            ]
           ]
         }
       })
@@ -393,9 +416,7 @@ describe('Games Routes', () => {
           middleware.handle.stack[0].handle = (req, res, next) => {
             req.sheetsService.getAll = jest
               .fn()
-              .mockResolvedValueOnce([
-                { id: 1, nome: 'Game' }
-              ])
+              .mockResolvedValueOnce([{ id: 1, nome: 'Game' }])
             next()
           }
         }
@@ -436,9 +457,7 @@ describe('Games Routes', () => {
         nota: ''
       }
 
-      const response = await request(app)
-        .post('/games')
-        .send(gameData)
+      const response = await request(app).post('/games').send(gameData)
 
       expect(response.status).toBe(201)
     })
@@ -446,9 +465,7 @@ describe('Games Routes', () => {
     it('deve validar dados', async () => {
       const invalidData = { plataforma: 'PC' } // falta nome
 
-      const response = await request(app)
-        .post('/games')
-        .send(invalidData)
+      const response = await request(app).post('/games').send(invalidData)
 
       expect(response.status).toBe(400)
     })
@@ -466,12 +483,12 @@ const app = require('../src/app')
 describe('Integration Tests', () => {
   describe('Full Game Lifecycle', () => {
     it('deve criar, ler, atualizar e deletar jogo', async () => {
-      const gameData = { /* ... */ }
+      const gameData = {
+        /* ... */
+      }
 
       // Create
-      const createResponse = await request(app)
-        .post('/games')
-        .send(gameData)
+      const createResponse = await request(app).post('/games').send(gameData)
       expect(createResponse.status).toBe(201)
 
       // Read
@@ -485,16 +502,14 @@ describe('Integration Tests', () => {
       expect(updateResponse.status).toBe(200)
 
       // Delete
-      const deleteResponse = await request(app)
-        .delete('/games/2')
+      const deleteResponse = await request(app).delete('/games/2')
       expect(deleteResponse.status).toBe(200)
     })
   })
 
   describe('Error Scenarios', () => {
     it('deve lidar com ID inválido', async () => {
-      const response = await request(app)
-        .delete('/games/invalid')
+      const response = await request(app).delete('/games/invalid')
 
       expect(response.status).toBe(400)
     })

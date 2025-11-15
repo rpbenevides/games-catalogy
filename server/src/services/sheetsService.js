@@ -7,35 +7,32 @@ const constants = require('../config/constants')
  * Realiza operações CRUD e exportação
  */
 class SheetsService {
-  constructor() {
-    this.client = null
-    this.spreadsheetId = constants.SPREADSHEET_ID
-    this.sheetName = constants.SHEET_NAME
-    this.dataRange = constants.DATA_RANGE
-  }
-
   /**
-   * Inicializa a conexão com Google Sheets
+   * Construtor do SheetsService
    * @param {GoogleAuth} auth - Cliente autenticado do Google
+   * @param {string} spreadsheetId - ID da planilha (pode usar env var como default)
    */
-  async initialize(auth) {
-    try {
-      this.client = google.sheets({ version: 'v4', auth })
-      logger.info('Google Sheets inicializado com sucesso')
-      return this
-    } catch (error) {
-      logger.error('Erro ao inicializar Google Sheets', {
-        error: error.message
-      })
-      throw error
+  constructor(auth, spreadsheetId = constants.SPREADSHEET_ID) {
+    if (!auth) {
+      throw new Error('GoogleAuth é obrigatório')
     }
+
+    this.auth = auth
+    this.client = google.sheets({ version: 'v4', auth })
+    this.spreadsheetId = spreadsheetId
+    this.sheetName = constants.SHEET_NAME
+    this.dataRange = `${this.sheetName}!A2:I`
+
+    logger.info('SheetsService inicializado', {
+      spreadsheetId: this.spreadsheetId
+    })
   }
 
   /**
-   * Verifica se está inicializado
+   * Verifica se está inicializado (sempre true se construtor passou)
    */
   isInitialized() {
-    return this.client !== null
+    return this.client !== null && this.auth !== null
   }
 
   /**
@@ -44,7 +41,7 @@ class SheetsService {
   async getAll() {
     try {
       if (!this.isInitialized()) {
-        throw new Error('Google Sheets não foi inicializado')
+        throw new Error('SheetsService não foi inicializado corretamente')
       }
 
       const result = await this.client.spreadsheets.values.get({

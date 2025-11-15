@@ -30,29 +30,33 @@ igdb.clearToken()
 ### Métodos
 
 #### `constructor(clientId, clientSecret)`
+
 - Inicializa o serviço com credenciais Twitch
 - Token começa como `null`
 
 #### `async getToken()`
+
 - Obtém token de autenticação
 - Reutiliza token em cache se ainda válido
 - Retorna string do token
 - Lança erro se falhar
 
 #### `async searchGames(query)`
+
 - Busca jogos na IGDB
 - Valida query (deve ser string não vazia)
 - Retorna array de resultados
 - Lança erro se falhar
 
 #### `clearToken()`
+
 - Limpa token do cache
 - Força nova autenticação na próxima busca
 
 ### Exemplo de Resposta
 
 ```javascript
-[
+;[
   {
     id: 1,
     name: 'The Witcher 3: Wild Hunt',
@@ -71,11 +75,9 @@ Gerencia leitura/escrita de dados no Google Sheets.
 
 ```javascript
 const SheetsService = require('./services/sheetsService')
-const { google } = require('googleapis')
 
-// Inicializar
-const sheets = new SheetsService()
-await sheets.initialize(auth) // auth = GoogleAuth client
+// Criar instância (inicializa automaticamente)
+const sheets = new SheetsService(auth, spreadsheetId)
 
 // Listar todos
 const games = await sheets.getAll()
@@ -85,7 +87,12 @@ await sheets.add({
   plataforma: 'PC',
   nome: 'Game Title',
   dataLancamento: '2025-01-01',
-  // ... outros campos
+  genero: 'RPG',
+  status: 'Não iniciado',
+  tempo: '',
+  inicio: '',
+  fim: '',
+  nota: ''
 })
 
 // Atualizar
@@ -100,13 +107,16 @@ const csv = await sheets.exportAsCSV()
 
 ### Métodos
 
-#### `async initialize(auth)`
-- Configura conexão com Google Sheets
-- Recebe GoogleAuth client
-- Lança erro se falhar
+#### `constructor(auth, spreadsheetId?)`
+- Inicializa o client e armazena credenciais
+- `auth`: GoogleAuth client (obrigatório)
+- `spreadsheetId`: ID da planilha (usa constante como default)
+- Lança erro se `auth` não fornecido
+- Automaticamente pronto para uso (sem await necessário)
 
 #### `isInitialized()`
 - Retorna boolean indicando se está pronto
+- Sempre true se construtor passou
 
 #### `async getAll()`
 - Retorna array de todos os jogos
@@ -114,7 +124,7 @@ const csv = await sheets.exportAsCSV()
 
 #### `async add(gameData)`
 - Adiciona novo jogo à planilha
-- Campos padrão: plataforma, nome, dataLancamento, genero, status, tempo, inicio, fim, nota
+- Campos: plataforma, nome, dataLancamento, genero, status, tempo, inicio, fim, nota
 
 #### `async update(gameId, gameData)`
 - Atualiza jogo existente
@@ -156,9 +166,13 @@ cacheService.deleteMany(['key1', 'key2'])
 cacheService.flush()
 
 // Lazy loading
-const value = await cacheService.getOrFetch('key', async () => {
-  return await expensiveOperation()
-}, 300)
+const value = await cacheService.getOrFetch(
+  'key',
+  async () => {
+    return await expensiveOperation()
+  },
+  300
+)
 
 // Estatísticas
 const stats = cacheService.getStats()
@@ -171,32 +185,40 @@ const keys = cacheService.getKeys()
 ### Métodos
 
 #### `get(key)`
+
 - Retorna valor do cache
 - Log automaticamente hit/miss
 - Retorna `undefined` se não existe
 
 #### `set(key, value, ttl?)`
+
 - Armazena valor no cache
 - TTL em segundos (opcional, padrão 300)
 
 #### `delete(key)`
+
 - Remove um item
 
 #### `deleteMany(keys)`
+
 - Remove múltiplos itens
 
 #### `flush()`
+
 - Limpa cache inteiro
 
 #### `getOrFetch(key, fetcher, ttl)`
+
 - Get com fallback a função
 - Se não está no cache, executa fetcher e armazena resultado
 - Útil para lazy loading
 
 #### `getStats()`
+
 - Retorna estatísticas: ksize, vsize, keys
 
 #### `getKeys()`
+
 - Retorna array de todas as chaves
 
 ## Injeção de Dependência
@@ -205,6 +227,13 @@ Os serviços são injetados no `req` object no `app.js`:
 
 ```javascript
 // Em app.js
+const auth = new google.auth.GoogleAuth({ credentials, scopes })
+
+// Criar serviços com dependências
+const sheetsService = new SheetsService(auth, spreadsheetId)
+const igdbService = new IGDBService(clientId, clientSecret)
+
+// Injetar nos requisitos
 app.use((req, res, next) => {
   req.auth = { ready: true, error: null }
   req.sheetsService = sheetsService
@@ -212,6 +241,13 @@ app.use((req, res, next) => {
   next()
 })
 ```
+
+Vantagens:
+- ✅ Serviços prontos no construtor
+- ✅ Sem necessidade de `await initialize()`
+- ✅ Testabilidade: fácil criar mocks com diferentes configs
+- ✅ Dependências explícitas no construtor
+- ✅ Reutilização: mesma instância em múltiplas rotas
 
 Isso permite usar em routes:
 
@@ -229,34 +265,65 @@ router.get('/', async (req, res, next) => {
 
 ```javascript
 class MockIGDBService {
-  async getToken() { return 'mock-token' }
-  async searchGames(query) { return [] }
+  constructor(clientId, clientSecret) {
+    this.clientId = clientId
+    this.clientSecret = clientSecret
+  }
+
+  async getToken() {
+    return 'mock-token'
+  }
+
+  async searchGames(query) {
+    return [{ id: 1, name: 'Mock Game' }]
+  }
 }
 
 // Usar em testes
-const igdb = new MockIGDBService()
+const igdb = new MockIGDBService('test-id', 'test-secret')
 ```
 
 ### Mock SheetsService
 
 ```javascript
 class MockSheetsService {
-  async initialize() {}
-  isInitialized() { return true }
-  async getAll() { return [] }
-  async add() {}
-  async update() {}
-  async delete() {}
-  async exportAsCSV() { return '' }
+  constructor(auth, spreadsheetId) {
+    this.auth = auth
+    this.spreadsheetId = spreadsheetId
+  }
+
+  isInitialized() {
+    return true
+  }
+
+  async getAll() {
+    return [{ id: 1, nome: 'Test Game' }]
+  }
+
+  async add(gameData) {
+    return { success: true }
+  }
+
+  async update(id, gameData) {
+    return { success: true }
+  }
+
+  async delete(id) {
+    return { success: true }
+  }
+
+  async exportAsCSV() {
+    return ''
+  }
 }
 ```
 
 ## Adicionando Novo Serviço
 
 1. Criar arquivo em `server/src/services/nomeService.js`
-2. Implementar como classe
-3. Importar em `app.js`
-4. Inicializar e injetar em `req`
+2. Implementar como classe com dependências no construtor
+3. Importar e instanciar em `app.js`
+4. Injetar no `req` object
 5. Usar em routes
 
 ### Exemplo
@@ -264,8 +331,12 @@ class MockSheetsService {
 ```javascript
 // server/src/services/analyticsService.js
 class AnalyticsService {
+  constructor(logger) {
+    this.logger = logger
+  }
+
   track(event, data) {
-    console.log(`Event: ${event}`, data)
+    this.logger.info(`Event: ${event}`, data)
   }
 }
 
@@ -275,7 +346,7 @@ module.exports = AnalyticsService
 ```javascript
 // Em app.js
 const AnalyticsService = require('./services/analyticsService')
-const analyticsService = new AnalyticsService()
+const analyticsService = new AnalyticsService(logger)
 
 app.use((req, res, next) => {
   req.analyticsService = analyticsService
@@ -293,48 +364,59 @@ router.post('/', (req, res) => {
 
 ## Boas Práticas
 
-1. **Use classes** para melhor organização
-2. **Injete dependências** no `req` object
+1. **Injete dependências no construtor** - mais testável
+2. **Inicialize no construtor** - sem async, sem `initialize()`
 3. **Use try/catch** e logger nos métodos
 4. **Documente métodos** com JSDoc
 5. **Valide entrada** antes de processar
-6. **Reutilize em múltiplas rotas** para DRY
+6. **Reutilize instâncias** em múltiplas rotas para DRY
 
 ## Migração de Código Procedural
 
-### Antes (procedural)
+### Antes (procedural com async init)
 
 ```javascript
-const getAllGames = async () => {
-  const sheets = getSheets()
-  // ...
+let sheetsClient = null
+
+const initializeSheets = async (auth) => {
+  sheetsClient = google.sheets({ version: 'v4', auth })
 }
 
-module.exports = { getAllGames }
+const getAll = async () => {
+  const result = await sheetsClient.spreadsheets.values.get(...)
+  return result
+}
 
 // Usar
-const games = await getAllGames()
+await initializeSheets(auth)
+const games = await getAll()
 ```
 
-### Depois (class-based)
+### Depois (class-based com constructor injection)
 
 ```javascript
 class SheetsService {
+  constructor(auth, spreadsheetId) {
+    this.client = google.sheets({ version: 'v4', auth })
+    this.spreadsheetId = spreadsheetId
+  }
+
   async getAll() {
-    // ...
+    const result = await this.client.spreadsheets.values.get(...)
+    return result
   }
 }
 
-module.exports = SheetsService
-
 // Usar
-const sheets = new SheetsService()
-await sheets.initialize(auth)
+const sheets = new SheetsService(auth, spreadsheetId)
 const games = await sheets.getAll()
 ```
 
 Benefícios:
+
+- ✅ Sem async no construtor
 - ✅ Estado encapsulado
+- ✅ Dependências explícitas
 - ✅ Mais fácil de testar
-- ✅ Dependency injection
 - ✅ Reutilizável em múltiplos contextos
+- ✅ Sem surpresas com estado compartilhado
